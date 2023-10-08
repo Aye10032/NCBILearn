@@ -2,7 +2,7 @@ import re
 
 import openai
 import requests
-from Bio import Entrez, SeqIO, Medline
+from Bio import Entrez, Medline
 from bs4 import BeautifulSoup
 
 pmc_list = []
@@ -31,12 +31,13 @@ def get_articles():
 
 def analyse_article():
     with open('output.txt', 'a', encoding='utf-8') as _file:
+        index = 1
         for pmc in pmc_list:
             handle = Entrez.efetch(db='PMC', id=pmc, rettype='medline', retmode='text')
             article = Medline.read(handle)
             handle.close()
 
-            _file.write(article['TI'] + '\n')
+            _file.write(f'{index}、' + article['TI'] + '\n')
             _file.write(f'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc}\n')
             _file.write(f'PMC:{pmc}\n')
             _file.write(article['AID'][0] + '\n')
@@ -55,6 +56,8 @@ def analyse_article():
                     _file.write(f'本文中提到了{len(species)}个物种，分别是: ' + ','.join(map(str, species)) + '\n\n')
             else:
                 _file.write('本文中提到了0个物种\n')
+
+            index += 1
 
     print('done')
 
@@ -93,12 +96,13 @@ def analyse_abstract(abstract):
         messages=[
             {'role': 'assistant',
              'content': f"下面我有一段生物领域论文的摘要，请问当中提到了哪些生物学上的分类为物种的名称？{abstract}。"
-                        f"注意，你的回答应当是一个python能够直接转为list的字符串，其中是物种名称，若没有提到，则返回一个空的列表。"},
+                        f"你的回答必须是一个python能够直接转为list的字符串，即形如'[]'的结构。其中是物种名称，若没有提到，则返回一个空的列表。"},
         ]
     )
 
     result = response['choices'][0]['message']['content']
-    list_str = re.findall(r'\[.*?\]', result)[0]
+    print(result)
+    list_str = re.findall(r'\[.*?\]', result)[-1]
     return eval(list_str)
 
 
