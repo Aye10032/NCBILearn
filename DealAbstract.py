@@ -5,7 +5,7 @@ abstract = 'A repressive chromatin state featuring trimethylated lysine 36 on hi
 response = openai.ChatCompletion.create(
     model="gpt-3.5-turbo",
     messages=[
-        {"role": "assistant", "content": f"下面我有一段生物领域论文的摘要，请问当中提到了哪些生物学上的分类为物种的？{abstract}。将物种存入一个python能够直接转为list的字符串中回答给我，若没有提到，则回答我'[]'"},
+        {"role": "assistant", "content": f"下面我有一段生物领域论文的摘要，请问当中提到了哪些生物学上的分类为物种的名称？{abstract}。将物种存入一个python能够直接转为list的字符串中回答给我，若没有提到，则回答我'[]'"},
     ]
 )
 
