@@ -1,12 +1,13 @@
 import re
 
 import openai
+import pysradb
 import requests
-from Bio import Entrez, Medline
+from Bio import Entrez, Medline, SeqIO
 from bs4 import BeautifulSoup
 
 pmc_list = []
-# 设置Entrez参数
+
 Entrez.email = 'aye10032@gmail.com'
 openai.api_key_path = 'API.txt'
 
@@ -43,8 +44,9 @@ def analyse_article():
             _file.write(article['AID'][0] + '\n')
 
             seq_id = get_seq_id(pmc)
-            print(seq_id if not seq_id == '' else 'no')
-            _file.write(f'本文中的数据:{seq_id}\n')
+            if not seq_id == '':
+                count = analyse_seq(seq_id)
+                _file.write(f'本文中的数据来源:{seq_id}，包含{count}个序列\n')
 
             if 'AB' in article:
                 species = analyse_abstract(article['AB'])
@@ -88,6 +90,59 @@ def get_seq_id(pmc):
         return ''
 
     return ''
+
+
+def analyse_seq(seq_id):
+    if seq_id.startswith('GES'):
+        return get_geo(seq_id)
+    # elif seq_id.startswith('RJNA'):
+    #     return get_bioproject(seq_id)
+    # elif seq_id.startswith('LBML'):
+    #     return get_genbank(seq_id)
+
+
+def get_geo(gse_id):
+    handle = Entrez.esearch(db='geo', term=f'{gse_id}[ACCN]')
+    record = Entrez.read(handle)
+    handle.close()
+
+    gds_list = record['IdList']
+
+    seq_id = []
+
+    for gds in gds_list:
+        print(gds)
+        handle = Entrez.esummary(db='gds', id=gds)
+        record = Entrez.read(handle)
+        handle.close()
+
+        sequences = record[0]['Samples']
+
+        for seq in sequences:
+            if not seq['Accession'] in seq_id:
+                seq_id.append(seq['Accession'])
+
+    return len(seq_id)
+
+
+def get_bioproject(rj_id):
+    handle = Entrez.esearch(db='sra', term=f'{rj_id[-4:]}[BioProject]')
+    summary = Entrez.read(handle)
+    handle.close()
+
+    seq_id = summary['IdList']
+
+    sra_db = pysradb.SRAweb()
+    results = sra_db.search_sra(seq_id[0])
+
+
+def get_genbank(uid):
+    handle = Entrez.esearch(db='nucleotide', term='LBML01000000')
+    record = Entrez.read(handle, "genbank")
+
+    handle = Entrez.efetch(db='nucleotide', id=record['IdList'][0], rettype='gb', retmode='text')
+    seq = SeqIO.read(handle, 'genbank')
+    handle.close()
 
 
 def analyse_abstract(abstract):
