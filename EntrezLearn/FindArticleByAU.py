@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 pmc_list = []
 
 Entrez.email = 'aye10032@gmail.com'
-openai.api_key_path = 'API.txt'
+openai.api_key_path = '../API.txt'
 
 
 def get_articles():
@@ -31,7 +31,7 @@ def get_articles():
 
 
 def analyse_article():
-    with open('output.txt', 'a', encoding='utf-8') as _file:
+    with open('../output.txt', 'a', encoding='utf-8') as _file:
         index = 1
         for pmc in pmc_list:
             handle = Entrez.efetch(db='PMC', id=pmc, rettype='medline', retmode='text')
@@ -162,7 +162,7 @@ def analyse_abstract(abstract):
 
 
 if __name__ == '__main__':
-    with open('output.txt', 'a', encoding='utf-8') as file:
+    with open('../output.txt', 'a', encoding='utf-8') as file:
         file.write('过去10年内发表文章:\n\n')
 
     get_articles()
